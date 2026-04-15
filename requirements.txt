@@ -1,0 +1,5 @@
+flask
+transformers
+torch
+huggingface_hub
+accelerate
