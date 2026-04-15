@@ -1,20 +1,33 @@
 from flask import Flask, request, jsonify
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from llama_cpp import Llama
+from huggingface_hub import hf_hub_download
 
 app = Flask(__name__)
 
-tokenizer = AutoTokenizer.from_pretrained("./model")
-model = AutoModelForCausalLM.from_pretrained("./model")
+# download GGUF model automatically
+model_path = hf_hub_download(
+    repo_id="TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF",
+    filename="tinyllama-1.1b-chat-v1.0.Q2_K.gguf"
+)
+
+llm = Llama(
+    model_path=model_path,
+    n_ctx=512,
+    n_threads=2
+)
 
 @app.route("/chat", methods=["POST"])
 def chat():
     user_msg = request.json["message"]
 
-    inputs = tokenizer(user_msg, return_tensors="pt")
-    output = model.generate(**inputs, max_new_tokens=60)
+    output = llm(
+        f"User: {user_msg}\nAssistant:",
+        max_tokens=100,
+        stop=["User:"]
+    )
 
-    response = tokenizer.decode(output[0], skip_special_tokens=True)
+    reply = output["choices"][0]["text"]
 
-    return jsonify({"reply": response})
+    return jsonify({"reply": reply})
 
 app.run(host="0.0.0.0", port=10000)
