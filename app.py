@@ -2,10 +2,9 @@ from flask import Flask, request, jsonify
 from llama_cpp import Llama
 from huggingface_hub import hf_hub_download
 from flask_cors import CORS
+import os
 
 app = Flask(__name__)
-
-# allow frontend to call API
 CORS(app)
 
 model_path = hf_hub_download(
@@ -44,4 +43,6 @@ def chat():
 
     return jsonify({"reply": reply})
 
-app.run(host="0.0.0.0", port=10000)
+port = int(os.environ.get("PORT", 10000))
+
+app.run(host="0.0.0.0", port=port)
